@@ -1,4 +1,5 @@
 import { Router } from "express";
+import applicationRoutes from "./applications";
 import authRoutes from "./auth.routes";
 import cvRoutes from "./cv.routes";
 import formatRoutes from "./format.routes";
@@ -14,5 +15,6 @@ router.use("/auth", authRoutes);
 router.use("/users", userRoutes);
 router.use("/cvs", cvRoutes);
 router.use("/formats", formatRoutes);
+router.use("/applications", applicationRoutes);
 
 export default router;

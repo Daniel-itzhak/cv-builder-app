@@ -3,6 +3,7 @@ import { prisma } from "../config/prisma";
 import { sidebarClassicDefaultContent } from "../data/default-cv-content";
 import { AppError } from "../middleware/errorHandler";
 import type { CvContent } from "../types/cv";
+import { normalizeCvContent } from "../utils/normalize-cv-content";
 
 export type CreateCvInput = {
   title: string;
@@ -76,7 +77,9 @@ export async function createCvForUser(userId: string, input: CreateCvInput) {
     throw new AppError(400, "Invalid or inactive template");
   }
 
-  const content = input.content ?? defaultContentForTemplate(input.templateId);
+  const content = normalizeCvContent(
+    input.content ?? defaultContentForTemplate(input.templateId)
+  );
 
   return prisma.cv.create({
     data: {
@@ -115,7 +118,11 @@ export async function updateCvForUser(
         ? { summary: input.summary?.trim() ?? null }
         : {}),
       ...(input.content !== undefined
-        ? { content: input.content as Prisma.InputJsonValue }
+        ? {
+            content: normalizeCvContent(
+              input.content
+            ) as Prisma.InputJsonValue,
+          }
         : {}),
       ...(input.isPublished !== undefined
         ? { isPublished: input.isPublished }

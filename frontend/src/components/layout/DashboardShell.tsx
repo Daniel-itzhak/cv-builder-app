@@ -3,7 +3,14 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { FileText, LayoutDashboard, LogOut, Settings, User } from "lucide-react";
+import {
+  Briefcase,
+  FileText,
+  LayoutDashboard,
+  LogOut,
+  Settings,
+  User,
+} from "lucide-react";
 import {
   clearSession,
   getUser,
@@ -16,6 +23,7 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/dashboard/cvs", label: "My CVs", icon: FileText },
+  { href: "/applications", label: "Applications", icon: Briefcase },
 ];
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {

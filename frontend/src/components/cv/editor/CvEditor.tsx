@@ -10,6 +10,7 @@ import { ThemeEditor } from "@/components/cv/editor/ThemeEditor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { updateCv } from "@/lib/cv-api";
+import { normalizeCvContent } from "@/lib/default-content";
 import type { CvContent, CvDetail } from "@/lib/cv-types";
 import { cn } from "@/lib/utils";
 
@@ -27,14 +28,16 @@ type Draft = {
 function normalizeDraft(draft: Draft): Draft {
   return {
     title: draft.title.trim() || "Untitled CV",
-    content: draft.content,
+    content: normalizeCvContent(draft.content),
   };
 }
 
 export function CvEditor({ initialCv }: Props) {
   const router = useRouter();
   const [title, setTitle] = useState(initialCv.title);
-  const [content, setContent] = useState<CvContent>(initialCv.content ?? {});
+  const [content, setContent] = useState<CvContent>(() =>
+    normalizeCvContent(initialCv.content ?? {})
+  );
   const [tab, setTab] = useState<Tab>("content");
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">(
     "idle"

@@ -332,7 +332,7 @@ export function SectionEditors({ content, onChange }: Props) {
                 company: "",
                 dates: "",
                 companyDescription: "",
-                bullets: [""],
+                bullets: [{ title: "", text: "" }],
               },
             ],
           })
@@ -400,7 +400,7 @@ export function SectionEditors({ content, onChange }: Props) {
                     const next = [...experience];
                     next[index] = {
                       ...job,
-                      bullets: [...job.bullets, ""],
+                      bullets: [...job.bullets, { title: "", text: "" }],
                     };
                     onChange({ ...content, experience: next });
                   }}
@@ -410,34 +410,55 @@ export function SectionEditors({ content, onChange }: Props) {
                 </Button>
               </div>
               {job.bullets.map((bullet, bIndex) => (
-                <div key={bIndex} className="flex gap-2">
-                  <Textarea
-                    label={`Bullet ${bIndex + 1}`}
-                    className="min-h-[64px]"
-                    value={bullet}
+                <div
+                  key={bIndex}
+                  className="space-y-2 rounded-md border border-[var(--line)]/80 bg-[var(--mist)]/30 p-3"
+                >
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-medium text-[var(--muted)]">
+                      Bullet {bIndex + 1}
+                    </p>
+                    <button
+                      type="button"
+                      className="rounded-md p-1.5 text-[var(--muted)] hover:bg-[var(--mist)] hover:text-[var(--ink)]"
+                      onClick={() => {
+                        const next = [...experience];
+                        next[index] = {
+                          ...job,
+                          bullets: job.bullets.filter((_, i) => i !== bIndex),
+                        };
+                        onChange({ ...content, experience: next });
+                      }}
+                      aria-label="Remove bullet"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <Input
+                    label="Bold title"
+                    placeholder="e.g. Drove core platform growth"
+                    value={bullet.title}
                     onChange={(e) => {
                       const next = [...experience];
                       const bullets = [...job.bullets];
-                      bullets[bIndex] = e.target.value;
+                      bullets[bIndex] = { ...bullet, title: e.target.value };
                       next[index] = { ...job, bullets };
                       onChange({ ...content, experience: next });
                     }}
                   />
-                  <button
-                    type="button"
-                    className="mt-7 rounded-md p-2 text-[var(--muted)] hover:bg-[var(--mist)] hover:text-[var(--ink)]"
-                    onClick={() => {
+                  <Textarea
+                    label="Description"
+                    className="min-h-[64px]"
+                    placeholder="Details that follow the bold title…"
+                    value={bullet.text}
+                    onChange={(e) => {
                       const next = [...experience];
-                      next[index] = {
-                        ...job,
-                        bullets: job.bullets.filter((_, i) => i !== bIndex),
-                      };
+                      const bullets = [...job.bullets];
+                      bullets[bIndex] = { ...bullet, text: e.target.value };
+                      next[index] = { ...job, bullets };
                       onChange({ ...content, experience: next });
                     }}
-                    aria-label="Remove bullet"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                  />
                 </div>
               ))}
             </div>

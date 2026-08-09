@@ -7,6 +7,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum ApplicationStatus {
+  SAVED
+  APPLIED
+  INTERVIEWING
+  REJECTED
+  OFFER
+}
+
+enum StageStatus {
+  PENDING
+  PASSED
+  FAILED
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -23,7 +37,8 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  cvs Cv[]
+  cvs             Cv[]
+  jobApplications JobApplication[]
 
   @@map("users")
 }
@@ -40,12 +55,55 @@ model Cv {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  template CvFormat? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  template        CvFormat?        @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  jobApplications JobApplication[]
 
   @@index([userId])
   @@index([templateId])
   @@map("cvs")
+}
+
+model JobApplication {
+  id              String            @id @default(cuid())
+  userId          String
+  cvId            String?
+  companyName     String
+  /// Free-form notes about the company (size, product, culture, etc.)
+  companyInfo     String?
+  jobTitle        String
+  jobUrl          String?
+  /// Where the application was submitted from (LinkedIn, company site, referral, etc.)
+  appliedFrom     String?
+  status          ApplicationStatus @default(SAVED)
+  rejectionReason String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  user   User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cv     Cv?               @relation(fields: [cvId], references: [id], onDelete: SetNull)
+  stages ApplicationStage[]
+
+  @@index([userId])
+  @@index([cvId])
+  @@index([status])
+  @@map("job_applications")
+}
+
+model ApplicationStage {
+  id            String      @id @default(cuid())
+  applicationId String
+  stageName     String
+  stageDate     DateTime
+  status        StageStatus @default(PENDING)
+  comments      String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  application JobApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+  @@map("application_stages")
 }
 
 /// Template / format definitions for CV layouts

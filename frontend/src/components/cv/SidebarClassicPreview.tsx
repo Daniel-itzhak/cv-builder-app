@@ -2,7 +2,11 @@
 
 import type { CSSProperties } from "react";
 import { getContactIcon } from "@/lib/contact-icons";
-import { mergeIcons, mergeThemeColors } from "@/lib/default-content";
+import {
+  mergeIcons,
+  mergeThemeColors,
+  normalizeCvContent,
+} from "@/lib/default-content";
 import type { CvContent } from "@/lib/cv-types";
 
 type Props = {
@@ -12,10 +16,11 @@ type Props = {
 };
 
 export function SidebarClassicPreview({
-  content,
+  content: rawContent,
   className,
   scale = 1,
 }: Props) {
+  const content = normalizeCvContent(rawContent);
   const colors = mergeThemeColors(content);
   const icons = mergeIcons(content);
   const header = content.header ?? { fullName: "", title: "" };
@@ -313,26 +318,41 @@ export function SidebarClassicPreview({
                         {job.companyDescription}
                       </p>
                     ) : null}
-                    {job.bullets.filter(Boolean).length > 0 ? (
+                    {job.bullets.some(
+                      (bullet) => bullet.title?.trim() || bullet.text?.trim()
+                    ) ? (
                       <ul
                         style={{
                           margin: 0,
                           paddingLeft: "15px",
                         }}
                       >
-                        {job.bullets.filter(Boolean).map((bullet, bIndex) => (
-                          <li
-                            key={bIndex}
-                            style={{
-                              marginBottom: "5px",
-                              textAlign: "justify",
-                              color: colors.body,
-                              fontSize: "9.5pt",
-                            }}
-                          >
-                            {bullet}
-                          </li>
-                        ))}
+                        {job.bullets
+                          .filter(
+                            (bullet) =>
+                              bullet.title?.trim() || bullet.text?.trim()
+                          )
+                          .map((bullet, bIndex) => (
+                            <li
+                              key={bIndex}
+                              style={{
+                                marginBottom: "5px",
+                                textAlign: "justify",
+                                color: colors.body,
+                                fontSize: "9.5pt",
+                              }}
+                            >
+                              {bullet.title?.trim() ? (
+                                <strong>
+                                  {bullet.title.trim()}
+                                  {bullet.text?.trim() ? ":" : ""}
+                                </strong>
+                              ) : null}
+                              {bullet.text?.trim()
+                                ? `${bullet.title?.trim() ? " " : ""}${bullet.text.trim()}`
+                                : null}
+                            </li>
+                          ))}
                       </ul>
                     ) : null}
                   </div>

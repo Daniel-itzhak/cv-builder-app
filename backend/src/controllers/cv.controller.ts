@@ -76,7 +76,27 @@ const contentSchema = z
           company: z.string(),
           dates: z.string(),
           companyDescription: z.string().optional(),
-          bullets: z.array(z.string()),
+          bullets: z.array(
+            z
+              .union([
+                z.string(),
+                z.object({
+                  title: z.string(),
+                  text: z.string(),
+                }),
+              ])
+              .transform((bullet) => {
+                if (typeof bullet !== "string") return bullet;
+                const raw = bullet.trim();
+                if (!raw) return { title: "", text: "" };
+                const colonIndex = raw.indexOf(":");
+                if (colonIndex === -1) return { title: "", text: raw };
+                return {
+                  title: raw.slice(0, colonIndex).trim(),
+                  text: raw.slice(colonIndex + 1).trim(),
+                };
+              })
+          ),
         })
       )
       .optional(),

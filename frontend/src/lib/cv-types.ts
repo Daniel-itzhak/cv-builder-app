@@ -26,12 +26,17 @@ export type LanguageItem = {
   level: string;
 };
 
+export type ExperienceBullet = {
+  title: string;
+  text: string;
+};
+
 export type ExperienceItem = {
   title: string;
   company: string;
   dates: string;
   companyDescription?: string;
-  bullets: string[];
+  bullets: ExperienceBullet[];
 };
 
 export type CvThemeColors = {

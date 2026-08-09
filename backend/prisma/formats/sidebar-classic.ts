@@ -169,7 +169,7 @@ export const sidebarClassicFormat = {
           company: "string",
           dates: "string",
           companyDescription: "string?",
-          bullets: ["string"],
+          bullets: [{ title: "string", text: "string" }],
         },
       ],
     },
