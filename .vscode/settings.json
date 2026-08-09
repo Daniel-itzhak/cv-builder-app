@@ -1,0 +1,29 @@
+{
+  "workbench.colorCustomizations": {
+    "titleBar.activeBackground": "#1f6feb",
+    "titleBar.activeForeground": "#ffffff",
+    "titleBar.inactiveBackground": "#164a9e",
+    "titleBar.inactiveForeground": "#d9e6fb",
+    "activityBar.background": "#0d3b8a",
+    "activityBar.foreground": "#ffffff",
+    "activityBar.inactiveForeground": "#b7cdf5",
+    "activityBar.activeBorder": "#58a6ff",
+    "statusBar.background": "#0d3b8a",
+    "statusBar.foreground": "#ffffff",
+    "statusBar.debuggingBackground": "#c2410c",
+    "statusBar.debuggingForeground": "#ffffff"
+  },
+  "eslint.workingDirectories": [
+    { "directory": "backend" },
+    { "directory": "frontend" }
+  ],
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/.next": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.next": true,
+    "**/package-lock.json": true
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Backend: Debug (Express)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "nvm use && npm run dev",
+      "cwd": "${workspaceFolder}/backend"
+    },
+    {
+      "name": "Frontend: Debug server-side (Next.js)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "nvm use && npm run dev",
+      "cwd": "${workspaceFolder}/frontend"
+    },
+    {
+      "name": "Frontend: Debug client-side (Chrome)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}/frontend"
+    },
+    {
+      "name": "Frontend: Debug full stack (Next.js)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "nvm use && npm run dev",
+      "cwd": "${workspaceFolder}/frontend",
+      "serverReadyAction": {
+        "pattern": "started server on .+, url: (https?://.+)",
+        "uriFormat": "%s",
+        "action": "debugWithChrome"
+      }
+    },
+    {
+      "name": "Run: Both together (single terminal)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "nvm use && npm run dev",
+      "cwd": "${workspaceFolder}"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Full Stack: Backend + Frontend",
+      "configurations": ["Backend: Debug (Express)", "Frontend: Debug full stack (Next.js)"],
+      "stopAll": true
+    }
+  ]
+}

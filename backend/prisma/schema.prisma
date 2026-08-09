@@ -1,0 +1,58 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  cvs Cv[]
+
+  @@map("users")
+}
+
+model Cv {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  summary     String?
+  templateId  String?
+  /// Dynamic sections: experience, education, skills, projects, etc.
+  content     Json     @default("{}")
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  template CvFormat? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([templateId])
+  @@map("cvs")
+}
+
+/// Template / format definitions for CV layouts
+model CvFormat {
+  id              String   @id @default(cuid())
+  name            String
+  /// CSS/grid variables and layout tokens for the renderer
+  layoutConfig    Json     @default("{}")
+  /// Lightweight schema describing thumbnail preview structure
+  thumbnailSchema Json     @default("{}")
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+
+  cvs Cv[]
+
+  @@map("cv_formats")
+}

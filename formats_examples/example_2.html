@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Daniel Itzhak - CV</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 0;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Arial', 'Helvetica', sans-serif;
+            color: #333333;
+            line-height: 1.35;
+            font-size: 9pt;
+            background-color: #ffffff;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .main-table {
+            width: 100%;
+            height: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            border: none;
+        }
+        .sidebar-cell {
+            width: 30%;
+            background-color: #f4f6f8 !important;
+            padding: 15mm 10mm 15mm 12mm;
+            vertical-align: top;
+            border-right: 1px solid #e2e8f0;
+        }
+        .content-cell {
+            width: 70%;
+            padding: 15mm 15mm 15mm 15mm;
+            vertical-align: top;
+        }
+        .sidebar-title {
+            font-size: 10.5pt;
+            color: #2c3e50;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            border-bottom: 1.5px solid #2c3e50;
+            padding-bottom: 3px;
+            margin-top: 0;
+            margin-bottom: 8px;
+        }
+        .sidebar-section {
+            margin-bottom: 20px;
+        }
+        .sidebar-section p {
+            margin: 0 0 5px 0;
+            font-size: 8.5pt;
+            color: #4a5568;
+            text-align: left;
+        }
+        .contact-row {
+            margin: 0 0 6px 0;
+            font-size: 8.5pt;
+            color: #4a5568;
+            text-align: left;
+            display: flex;
+            align-items: center;
+        }
+        .sidebar-section a {
+            color: #16a085;
+            text-decoration: none;
+        }
+        .sidebar-section a:hover {
+            text-decoration: underline;
+        }
+        .icon {
+            margin-right: 6px;
+            font-size: 9.5pt;
+        }
+        .header {
+            margin-bottom: 15px;
+        }
+        .header h1 {
+            font-size: 24pt;
+            color: #2c3e50;
+            margin: 0 0 2px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: bold;
+        }
+        .header .subtitle {
+            font-size: 12pt;
+            color: #16a085;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .content-title {
+            font-size: 11pt;
+            color: #2c3e50;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            border-bottom: 1.5px solid #2c3e50;
+            padding-bottom: 3px;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+        .summary-text {
+            text-align: justify;
+            margin: 0 0 10px 0;
+            color: #2d3748;
+            font-size: 9pt;
+        }
+        .job-block {
+            margin-bottom: 14px;
+        }
+        .job-header-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 2px;
+        }
+        .job-title {
+            font-weight: bold;
+            font-size: 10pt;
+            color: #2c3e50;
+            text-align: left;
+        }
+        .job-date {
+            text-align: right;
+            color: #718096;
+            font-weight: bold;
+            font-size: 9pt;
+        }
+        .company-name {
+            font-style: italic;
+            color: #16a085;
+            font-weight: bold;
+            margin-bottom: 2px;
+            font-size: 9pt;
+        }
+        .company-desc {
+            font-size: 8pt;
+            color: #718096;
+            font-style: italic;
+            margin: 0 0 5px 0;
+        }
+        ul.job-bullets {
+            margin: 0;
+            padding-left: 15px;
+        }
+        ul.job-bullets li {
+            margin-bottom: 4px;
+            text-align: justify;
+            color: #2d3748;
+            font-size: 9pt;
+        }
+    </style>
+</head>
+<body>
+    <table class="main-table">
+        <tr>
+            <!-- Left Column (Sidebar) -->
+            <td class="sidebar-cell">
+                <div class="sidebar-section">
+                    <div class="sidebar-title">Contact</div>
+                    <div class="contact-row"><span class="icon">📞</span><strong>Phone:</strong>&nbsp;054-4700187</div>
+                    <div class="contact-row"><span class="icon">✉️</span><strong>Email:</strong>&nbsp;<a href="mailto:yazek02@gmail.com">yazek02@gmail.com</a></div>
+                    <div class="contact-row"><span class="icon">🔗</span><strong>LinkedIn:</strong>&nbsp;<a href="https://www.linkedin.com/in/daniel-itzhak-2b94741b6" target="_blank">daniel-itzhak</a></div>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-title">Education</div>
+                    <p style="margin: 0 0 8px 0;">
+                        <strong>Full Stack BootCamp</strong><br>
+                        <span style="color:#16a085; font-style:italic;">Experis | 2020 – 2021</span><br>
+                        <span style="font-size:8pt; color:#718096;">Intensive software engineering program.</span>
+                    </p>
+                    <p style="margin: 0;">
+                        <strong>B.Sc. Mechanical Eng.</strong><br>
+                        <span style="color:#16a085; font-style:italic;">Ben-Gurion University | 2015 – 2020</span><br>
+                        <span style="font-size:8pt; color:#718096;">Analytical foundation & advanced math.</span>
+                    </p>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-title">Military Service</div>
+                    <p><strong>IDF Military Medic</strong><br>
+                    <span style="color:#16a085; font-style:italic;">2007 – 2010</span><br>
+                    <span style="font-size:8pt; color:#718096;">High-pressure problem-solving and rapid decision-making.</span></p>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-title">Experience</div>
+                    <p><strong>Physics & Math Educator</strong><br>
+                    <span style="color:#16a085; font-style:italic;">2016 – 2020</span><br>
+                    <span style="font-size:8pt; color:#718096;">Refined mentorship & complex scoping.</span></p>
+                </div>
+
+                <div class="sidebar-section" style="margin-bottom: 0;">
+                    <div class="sidebar-title">Languages</div>
+                    <p><strong>Hebrew:</strong> Native</p>
+                    <p><strong>English:</strong> Fluent</p>
+                </div>
+            </td>
+
+            <!-- Right Column (Main Content) -->
+            <td class="content-cell">
+                <div class="header">
+                    <h1>Daniel Itzhak</h1>
+                    <div class="subtitle">Full Stack Developer</div>
+                </div>
+
+                <div class="content-title">Professional Summary</div>
+                <p class="summary-text">
+                    Versatile and results-driven Full Stack Developer specializing in high-scale conversational product architectures and robust end-to-end web applications. Recognized expert in Viber API integration, with a proven track record of designing scalable microservices and real-time event distribution systems. Adept at leveraging modern AI-assisted workflows to maximize development velocity while ensuring absolute architectural integrity and type safety.
+                </p>
+
+                <div class="content-title">Professional Experience</div>
+
+                <!-- Chat Leap -->
+                <div class="job-block">
+                    <table class="job-header-table">
+                        <tr>
+                            <td class="job-title">Full Stack Developer (Full-Cycle Ownership)</td>
+                            <td class="job-date">2024 – Present</td>
+                        </tr>
+                    </table>
+                    <div class="company-name">Chat Leap</div>
+                    <div class="company-desc">An enterprise conversational automation platform specializing in high-scale Viber API customer journey orchestration.</div>
+                    <ul class="job-bullets">
+                        <li><strong>Drove core product architecture:</strong> Designed and scaled backend infrastructure supporting an ecosystem processing 100M+ monthly events across millions of users, optimizing PostgreSQL and MongoDB database schemas for high-throughput queues.</li>
+                        <li><strong>Engineered high-scale Viber bot architecture:</strong> Designed and executed complex, multi-step Viber bot workflows leveraging the Viber API, building low-latency webhook consumer microservices in Node.js/TypeScript to handle massive concurrent messaging loads.</li>
+                        <li><strong>Maximized developer velocity & UI alignment:</strong> Directed the technical design of complex, component-driven visual flow builders and orchestration dashboards using React, translating dense user journeys into highly responsive client-side state models.</li>
+                        <li><strong>Headed E2E GenAI integrations:</strong> Engineered secure, multi-tenant token architectures and autonomous storefront scraping pipelines utilizing OpenAI and Gemini APIs to dynamically provision intelligent, contextual chatbot workflows.</li>
+                        <li><strong>Owned AWS cloud engineering:</strong> Provisioned highly available, scalable application environments, implemented secure IAM policy frameworks, and established real-time automated system performance monitoring.</li>
+                    </ul>
+                </div>
+
+                <!-- Dev.Force -->
+                <div class="job-block" style="margin-bottom: 0;">
+                    <table class="job-header-table">
+                        <tr>
+                            <td class="job-title">Full Stack Developer</td>
+                            <td class="job-date">2021 – 2024</td>
+                        </tr>
+                    </table>
+                    <div class="company-name">Dev.Force</div>
+                    <div class="company-desc">A software development agency delivering tailored end-to-end digital solutions for corporate clients.</div>
+                    <ul class="job-bullets">
+                        <li><strong>Accelerated client product delivery:</strong> Built and deployed complex full-stack applications from scratch, ensuring absolute alignment with customer business goals and technical scoping.</li>
+                        <li><strong>Engineered core microservices architectures:</strong> Constructed a dynamic flight search algorithm for enterprise clients supporting real-time optimal data routing and secure transaction checkout flows.</li>
+                        <li><strong>Optimized database & caching layers:</strong> Restructured complex PostgreSQL relational database schemas and integrated low-latency Redis caching layers to significantly reduce infrastructure overhead.</li>
+                        <li><strong>Managed stakeholder delivery & team velocity:</strong> Interfaced directly with corporate clients to resolve performance bottlenecks and established onboarding frameworks to mentor incoming engineers.</li>
+                    </ul>
+                </div>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
