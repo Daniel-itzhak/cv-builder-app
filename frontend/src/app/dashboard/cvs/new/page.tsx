@@ -6,7 +6,6 @@ import { TemplateThumbnail } from "@/components/cv/TemplateThumbnail";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createCv, listFormats } from "@/lib/cv-api";
-import { getToken } from "@/lib/auth";
 import type { CvFormatSummary } from "@/lib/cv-types";
 
 export default function NewCvPage() {
@@ -19,11 +18,6 @@ export default function NewCvPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!getToken()) {
-      router.replace("/login");
-      return;
-    }
-
     void (async () => {
       try {
         const data = await listFormats();
@@ -35,7 +29,7 @@ export default function NewCvPage() {
         setLoading(false);
       }
     })();
-  }, [router]);
+  }, []);
 
   async function handleCreate() {
     if (!selectedId) return;

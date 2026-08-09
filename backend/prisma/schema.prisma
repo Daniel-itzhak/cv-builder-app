@@ -13,6 +13,13 @@ model User {
   passwordHash String
   firstName    String
   lastName     String
+  profession   String?
+  country      String?
+  city         String?
+  phone        String?
+  linkedinUrl  String?
+  websiteUrl   String?
+  bio          String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

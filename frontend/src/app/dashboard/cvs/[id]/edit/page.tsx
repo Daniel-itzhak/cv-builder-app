@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { CvEditor } from "@/components/cv/editor/CvEditor";
 import { getCv } from "@/lib/cv-api";
-import { getToken } from "@/lib/auth";
 import type { CvDetail } from "@/lib/cv-types";
 
 export default function EditCvPage() {
@@ -14,11 +13,6 @@ export default function EditCvPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!getToken()) {
-      router.replace("/login");
-      return;
-    }
-
     const id = params.id;
     if (!id) return;
 
@@ -30,7 +24,7 @@ export default function EditCvPage() {
         setError(err instanceof Error ? err.message : "Failed to load CV");
       }
     })();
-  }, [params.id, router]);
+  }, [params.id]);
 
   if (error) {
     return (

@@ -7,7 +7,6 @@ import { FileText, PlusCircle, Trash2 } from "lucide-react";
 import { TemplateThumbnail } from "@/components/cv/TemplateThumbnail";
 import { Button } from "@/components/ui/button";
 import { deleteCv, listCvs } from "@/lib/cv-api";
-import { getToken } from "@/lib/auth";
 import type { CvListItem } from "@/lib/cv-types";
 
 export default function CvsPage() {
@@ -17,11 +16,6 @@ export default function CvsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!getToken()) {
-      router.replace("/login");
-      return;
-    }
-
     void (async () => {
       try {
         const data = await listCvs();
@@ -32,7 +26,7 @@ export default function CvsPage() {
         setLoading(false);
       }
     })();
-  }, [router]);
+  }, []);
 
   async function handleDelete(id: string) {
     if (!confirm("Delete this CV?")) return;

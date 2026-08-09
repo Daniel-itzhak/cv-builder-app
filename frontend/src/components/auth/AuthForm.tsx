@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { BrandLink } from "@/components/layout/BrandLink";
 import { useAuthForm } from "@/hooks/useAuthForm";
 
 type AuthFormProps = {
@@ -17,14 +17,10 @@ export function AuthForm({ mode }: AuthFormProps) {
   return (
     <div className="mx-auto w-full max-w-md rounded-xl border border-[var(--line)] bg-[var(--paper)] p-8 shadow-sm">
       <div className="mb-8 flex flex-col items-center text-center">
-        <Link href="/" className="mb-4 flex items-center gap-2">
-          <span className="flex h-9 w-9 items-center justify-center rounded-md bg-[var(--ink)] text-[var(--paper)]">
-            <FileText className="h-4 w-4" aria-hidden />
-          </span>
-          <span className="font-[family-name:var(--font-display)] text-xl tracking-tight">
-            Folio
-          </span>
-        </Link>
+        <BrandLink
+          className="mb-4 text-[var(--ink)]"
+          iconClassName="bg-[var(--ink)] text-[var(--paper)]"
+        />
         <h1 className="font-[family-name:var(--font-display)] text-2xl tracking-tight text-[var(--ink)]">
           {isLogin ? "Welcome back" : "Create your account"}
         </h1>

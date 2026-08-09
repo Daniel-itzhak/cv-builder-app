@@ -1,5 +1,6 @@
 import { prisma } from "../config/prisma";
 import { AppError } from "../middleware/errorHandler";
+import { toPublicUser } from "./user.service";
 import { signToken } from "../utils/jwt";
 import { comparePassword, hashPassword } from "../utils/password";
 
@@ -14,22 +15,6 @@ export type LoginInput = {
   email: string;
   password: string;
 };
-
-function toPublicUser(user: {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  createdAt: Date;
-}) {
-  return {
-    id: user.id,
-    email: user.email,
-    firstName: user.firstName,
-    lastName: user.lastName,
-    createdAt: user.createdAt,
-  };
-}
 
 export async function registerUser(input: RegisterInput) {
   const email = input.email.toLowerCase().trim();

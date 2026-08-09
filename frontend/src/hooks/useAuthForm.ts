@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { apiFetch } from "@/lib/api";
-import { setToken, type AuthUser } from "@/lib/auth";
+import { setToken, setUser, type AuthUser } from "@/lib/auth";
 
 type AuthMode = "login" | "register";
 
@@ -12,8 +12,16 @@ type AuthResponse = {
   token: string;
 };
 
+function safeNextPath(raw: string | null): string {
+  if (!raw || !raw.startsWith("/") || raw.startsWith("//")) {
+    return "/dashboard";
+  }
+  return raw;
+}
+
 export function useAuthForm(mode: AuthMode) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -42,7 +50,8 @@ export function useAuthForm(mode: AuthMode) {
         body: JSON.stringify(payload),
       });
       setToken(result.token);
-      router.push("/dashboard");
+      setUser(result.user);
+      router.push(safeNextPath(searchParams.get("next")));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {

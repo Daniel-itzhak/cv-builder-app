@@ -136,6 +136,8 @@ A `.vscode/settings.json` is also included with a distinct color theme (title ba
 | ------ | -------------------- | ---- | ------------------ |
 | POST   | `/api/auth/register` | No   | Create an account  |
 | POST   | `/api/auth/login`    | No   | Login, receive JWT |
+| GET    | `/api/users/me`      | JWT  | Get current user profile |
+| PATCH  | `/api/users/me`      | JWT  | Update profile details |
 | GET    | `/api/formats`       | JWT  | List active templates |
 | GET    | `/api/formats/:id`   | JWT  | Get a template     |
 | GET    | `/api/cvs`           | JWT  | List current user's CVs |
