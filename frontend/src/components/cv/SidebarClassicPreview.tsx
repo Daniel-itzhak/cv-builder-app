@@ -13,12 +13,15 @@ type Props = {
   content: CvContent;
   className?: string;
   scale?: number;
+  /** Hide decorative shadow for PDF export / print. */
+  forExport?: boolean;
 };
 
 export function SidebarClassicPreview({
   content: rawContent,
   className,
   scale = 1,
+  forExport = false,
 }: Props) {
   const content = normalizeCvContent(rawContent);
   const colors = mergeThemeColors(content);
@@ -40,7 +43,10 @@ export function SidebarClassicPreview({
 
   const pageStyle: CSSProperties = {
     width: "210mm",
+    height: forExport ? "297mm" : undefined,
     minHeight: "297mm",
+    maxHeight: forExport ? "297mm" : undefined,
+    overflow: forExport ? "hidden" : undefined,
     background: colors.pageBg,
     color: colors.text,
     fontFamily: "Arial, Helvetica, sans-serif",
@@ -48,7 +54,7 @@ export function SidebarClassicPreview({
     lineHeight: 1.45,
     transform: scale !== 1 ? `scale(${scale})` : undefined,
     transformOrigin: "top left",
-    boxShadow: "0 12px 40px rgba(15, 23, 42, 0.12)",
+    boxShadow: forExport ? "none" : "0 12px 40px rgba(15, 23, 42, 0.12)",
   };
 
   return (
@@ -56,7 +62,8 @@ export function SidebarClassicPreview({
       <table
         style={{
           width: "100%",
-          minHeight: "297mm",
+          height: forExport ? "100%" : undefined,
+          minHeight: forExport ? undefined : "297mm",
           borderCollapse: "collapse",
           tableLayout: "fixed",
         }}
@@ -86,7 +93,7 @@ export function SidebarClassicPreview({
                     Icon={EmailIcon}
                     label="Email"
                     colors={colors}
-                    href={`mailto:${contact.email}`}
+                    href={`mailto:${contact.email.trim()}`}
                     value={contact.email}
                   />
                 ) : null}
@@ -95,7 +102,7 @@ export function SidebarClassicPreview({
                     Icon={LinkedinIcon}
                     label="LinkedIn"
                     colors={colors}
-                    href={contact.linkedin.url || undefined}
+                    href={toAbsoluteUrl(contact.linkedin.url || contact.linkedin.label)}
                     value={contact.linkedin.label || contact.linkedin.url}
                   />
                 ) : null}
@@ -104,7 +111,7 @@ export function SidebarClassicPreview({
                     Icon={WebsiteIcon}
                     label="Website"
                     colors={colors}
-                    href={contact.website.url || undefined}
+                    href={toAbsoluteUrl(contact.website.url || contact.website.label)}
                     value={contact.website.label || contact.website.url}
                   />
                 ) : null}
@@ -324,7 +331,8 @@ export function SidebarClassicPreview({
                       <ul
                         style={{
                           margin: 0,
-                          paddingLeft: "15px",
+                          padding: 0,
+                          listStyle: "none",
                         }}
                       >
                         {job.bullets
@@ -336,21 +344,36 @@ export function SidebarClassicPreview({
                             <li
                               key={bIndex}
                               style={{
+                                display: "flex",
+                                alignItems: "flex-start",
+                                gap: "7px",
                                 marginBottom: "5px",
                                 textAlign: "justify",
                                 color: colors.body,
                                 fontSize: "9.5pt",
                               }}
                             >
-                              {bullet.title?.trim() ? (
-                                <strong>
-                                  {bullet.title.trim()}
-                                  {bullet.text?.trim() ? ":" : ""}
-                                </strong>
-                              ) : null}
-                              {bullet.text?.trim()
-                                ? `${bullet.title?.trim() ? " " : ""}${bullet.text.trim()}`
-                                : null}
+                              <span
+                                aria-hidden
+                                style={{
+                                  flexShrink: 0,
+                                  lineHeight: 1.45,
+                                  fontWeight: 700,
+                                }}
+                              >
+                                •
+                              </span>
+                              <span style={{ flex: 1 }}>
+                                {bullet.title?.trim() ? (
+                                  <strong>
+                                    {bullet.title.trim()}
+                                    {bullet.text?.trim() ? ":" : ""}
+                                  </strong>
+                                ) : null}
+                                {bullet.text?.trim()
+                                  ? `${bullet.title?.trim() ? " " : ""}${bullet.text.trim()}`
+                                  : null}
+                              </span>
                             </li>
                           ))}
                       </ul>
@@ -431,36 +454,85 @@ function ContactRow({
   href,
   colors,
 }: {
-  Icon: React.ComponentType<{ className?: string; style?: CSSProperties }>;
+  Icon: React.ComponentType<{
+    className?: string;
+    style?: CSSProperties;
+    size?: number;
+    strokeWidth?: number;
+  }>;
   label: string;
   value: string;
-  href?: string;
+  href?: string | null;
   colors: ReturnType<typeof mergeThemeColors>;
 }) {
   return (
-    <div
+    <table
       style={{
+        width: "100%",
+        borderCollapse: "collapse",
         margin: "0 0 7px 0",
         fontSize: "9pt",
+        lineHeight: 1.35,
         color: colors.sidebarText,
-        display: "flex",
-        alignItems: "center",
-        gap: "6px",
       }}
     >
-      <Icon style={{ width: 12, height: 12, flexShrink: 0, color: colors.accent }} />
-      <span>
-        <strong>{label}:</strong>&nbsp;
-        {href ? (
-          <a href={href} style={{ color: colors.accent, textDecoration: "none" }}>
-            {value}
-          </a>
-        ) : (
-          value
-        )}
-      </span>
-    </div>
+      <tbody>
+        <tr>
+          <td
+            style={{
+              width: 14,
+              verticalAlign: "middle",
+              padding: 0,
+              paddingRight: 6,
+            }}
+          >
+            <Icon
+              size={11}
+              strokeWidth={2.25}
+              style={{
+                width: 11,
+                height: 11,
+                display: "block",
+                color: colors.accent,
+                // Optical correction: Lucide glyphs sit slightly high in the box.
+                transform: "translateY(1px)",
+              }}
+            />
+          </td>
+          <td style={{ verticalAlign: "middle", padding: 0 }}>
+            <strong>{label}:</strong>&nbsp;
+            {href ? (
+              <a
+                href={href}
+                target="_blank"
+                rel="noreferrer"
+                style={{ color: colors.accent, textDecoration: "underline" }}
+              >
+                {value}
+              </a>
+            ) : (
+              value
+            )}
+          </td>
+        </tr>
+      </tbody>
+    </table>
   );
+}
+
+function toAbsoluteUrl(raw?: string | null): string | undefined {
+  const value = raw?.trim();
+  if (!value) return undefined;
+  if (/^https?:\/\//i.test(value)) return value;
+  if (value.startsWith("//")) return `https:${value}`;
+  if (value.includes("linkedin.com") || value.startsWith("/in/")) {
+    return `https://${value.replace(/^\/+/, "")}`;
+  }
+  // LinkedIn handle only (e.g. "daniel-itzhak")
+  if (/^[a-zA-Z0-9-]+$/.test(value)) {
+    return `https://www.linkedin.com/in/${value}`;
+  }
+  return `https://${value}`;
 }
 
 function RoleBlock({

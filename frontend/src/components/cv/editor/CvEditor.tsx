@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Check, LoaderCircle } from "lucide-react";
+import { ArrowLeft, Check, Download, LoaderCircle } from "lucide-react";
 import { SidebarClassicPreview } from "@/components/cv/SidebarClassicPreview";
 import { IconEditor } from "@/components/cv/editor/IconEditor";
 import { SectionEditors } from "@/components/cv/editor/SectionEditors";
@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { updateCv } from "@/lib/cv-api";
 import { normalizeCvContent } from "@/lib/default-content";
+import { downloadElementAsPdf } from "@/lib/download-cv-pdf";
 import type { CvContent, CvDetail } from "@/lib/cv-types";
 import { cn } from "@/lib/utils";
 
@@ -43,6 +44,7 @@ export function CvEditor({ initialCv }: Props) {
     "idle"
   );
   const [error, setError] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState(false);
 
   const latestRef = useRef<Draft>({ title, content });
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -51,6 +53,7 @@ export function CvEditor({ initialCv }: Props) {
   const mountedRef = useRef(true);
   /** Serializes saves so an older PATCH never overwrites a newer one. */
   const saveChainRef = useRef(Promise.resolve());
+  const exportRef = useRef<HTMLDivElement>(null);
 
   function setDraftTitle(next: string) {
     setTitle(next);
@@ -179,6 +182,35 @@ export function CvEditor({ initialCv }: Props) {
     router.push("/dashboard/cvs");
   }
 
+  async function handleDownloadPdf() {
+    const target = exportRef.current;
+    if (!target || downloading) return;
+
+    setDownloading(true);
+    setError(null);
+    try {
+      if (dirtyRef.current || saveTimer.current) {
+        await persist();
+      }
+
+      const name =
+        content.header?.fullName?.trim() ||
+        title.trim() ||
+        "CV";
+
+      await downloadElementAsPdf(target, name);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to open PDF export. Allow pop-ups and try again."
+      );
+      setSaveState("error");
+    } finally {
+      setDownloading(false);
+    }
+  }
+
   return (
     <div className="-mx-4 -my-8 flex min-h-[calc(100vh-4.5rem)] flex-col md:-mx-8">
       <header className="flex flex-wrap items-center gap-3 border-b border-[var(--line)] bg-[var(--paper)] px-4 py-3 md:px-6">
@@ -220,6 +252,19 @@ export function CvEditor({ initialCv }: Props) {
             onClick={() => void persist()}
           >
             Save now
+          </Button>
+          <Button
+            className="h-9"
+            disabled={downloading}
+            onClick={() => void handleDownloadPdf()}
+            title="Opens the print dialog — choose Save as PDF for best quality"
+          >
+            {downloading ? (
+              <LoaderCircle className="h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4" />
+            )}
+            {downloading ? "Preparing…" : "Download PDF"}
           </Button>
         </div>
       </header>
@@ -272,6 +317,19 @@ export function CvEditor({ initialCv }: Props) {
             </div>
           </div>
         </section>
+      </div>
+
+      {/* Full-size offscreen page used for PDF capture (avoids CSS scale artifacts). */}
+      <div
+        aria-hidden
+        className="pointer-events-none fixed top-0 left-[-10000px] z-[-1]"
+      >
+        <div
+          ref={exportRef}
+          style={{ width: "210mm", height: "297mm", overflow: "hidden" }}
+        >
+          <SidebarClassicPreview content={content} forExport />
+        </div>
       </div>
     </div>
   );
