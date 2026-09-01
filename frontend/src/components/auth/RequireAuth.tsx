@@ -2,20 +2,21 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { getToken } from "@/lib/auth";
+import { clearSession, hasValidSession } from "@/lib/auth";
 
 type Props = {
   children: React.ReactNode;
 };
 
-/** Blocks dashboard routes until a JWT is present in localStorage. */
+/** Blocks dashboard routes until a non-expired JWT is present in localStorage. */
 export function RequireAuth({ children }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (!getToken()) {
+    if (!hasValidSession()) {
+      clearSession();
       const next = encodeURIComponent(pathname || "/dashboard");
       router.replace(`/login?next=${next}`);
       return;

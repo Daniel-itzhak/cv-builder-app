@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FileText, PlusCircle, Trash2 } from "lucide-react";
+import { CopyPlus, FileText, LoaderCircle, PlusCircle, Trash2 } from "lucide-react";
 import { TemplateThumbnail } from "@/components/cv/TemplateThumbnail";
 import { Button } from "@/components/ui/button";
-import { deleteCv, listCvs } from "@/lib/cv-api";
+import { deleteCv, duplicateCv, listCvs } from "@/lib/cv-api";
 import type { CvListItem } from "@/lib/cv-types";
 
 export default function CvsPage() {
@@ -14,6 +14,7 @@ export default function CvsPage() {
   const [cvs, setCvs] = useState<CvListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
 
   useEffect(() => {
     void (async () => {
@@ -38,6 +39,19 @@ export default function CvsPage() {
     }
   }
 
+  async function handleDuplicate(id: string) {
+    if (duplicatingId) return;
+    setDuplicatingId(id);
+    setError(null);
+    try {
+      const copy = await duplicateCv(id);
+      router.push(`/dashboard/cvs/${copy.id}/edit`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to duplicate");
+      setDuplicatingId(null);
+    }
+  }
+
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -46,7 +60,7 @@ export default function CvsPage() {
             My CVs
           </h2>
           <p className="mt-1 text-[var(--muted)]">
-            Create a CV from a template, then edit content live.
+            Create a CV from a template, duplicate one to tailor it for a role, then edit live.
           </p>
         </div>
         <Button onClick={() => router.push("/dashboard/cvs/new")}>
@@ -108,14 +122,31 @@ export default function CvsPage() {
                   Updated {new Date(cv.updatedAt).toLocaleDateString()}
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => void handleDelete(cv.id)}
-                className="rounded-md p-2 text-[var(--muted)] hover:bg-[var(--mist)] hover:text-[var(--ink)]"
-                aria-label="Delete CV"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
+              <div className="flex shrink-0 items-center">
+                <button
+                  type="button"
+                  onClick={() => void handleDuplicate(cv.id)}
+                  disabled={duplicatingId !== null}
+                  className="rounded-md p-2 text-[var(--muted)] hover:bg-[var(--mist)] hover:text-[var(--ink)] disabled:pointer-events-none disabled:opacity-50"
+                  aria-label="Duplicate CV"
+                  title="Duplicate for another position"
+                >
+                  {duplicatingId === cv.id ? (
+                    <LoaderCircle className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <CopyPlus className="h-4 w-4" />
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleDelete(cv.id)}
+                  disabled={duplicatingId !== null}
+                  className="rounded-md p-2 text-[var(--muted)] hover:bg-[var(--mist)] hover:text-[var(--ink)] disabled:pointer-events-none disabled:opacity-50"
+                  aria-label="Delete CV"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
             </div>
           </div>
         ))}

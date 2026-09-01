@@ -8,7 +8,19 @@ import {
   type ChangeEvent,
   type FormEvent,
 } from "react";
-import { Briefcase, ExternalLink, FileText, PlusCircle, X } from "lucide-react";
+import {
+  Award,
+  Bookmark,
+  Briefcase,
+  ExternalLink,
+  FileText,
+  Phone,
+  PlusCircle,
+  Send,
+  X,
+  XCircle,
+  type LucideIcon,
+} from "lucide-react";
 import {
   addApplicationStage,
   createApplication,
@@ -16,6 +28,7 @@ import {
   updateApplication,
 } from "@/lib/application-api";
 import type {
+  ApplicationStage,
   ApplicationStatus,
   JobApplication,
   StageStatus,
@@ -43,6 +56,70 @@ const COLUMN_STYLES: Record<ApplicationStatus, string> = {
   REJECTED: "border-t-rose-600",
   OFFER: "border-t-emerald-600",
 };
+
+const STATUS_ICONS: Record<ApplicationStatus, LucideIcon> = {
+  SAVED: Bookmark,
+  APPLIED: Send,
+  INTERVIEWING: Phone,
+  REJECTED: XCircle,
+  OFFER: Award,
+};
+
+const STATUS_ICON_CLASS: Record<ApplicationStatus, string> = {
+  SAVED: "text-[var(--muted)]",
+  APPLIED: "text-[var(--accent)]",
+  INTERVIEWING: "text-sky-600",
+  REJECTED: "text-rose-600",
+  OFFER: "text-emerald-600",
+};
+
+const STAGE_BADGE_CLASS: Record<StageStatus, string> = {
+  PENDING: "bg-sky-100 text-sky-800",
+  PASSED: "bg-emerald-100 text-emerald-800",
+  FAILED: "bg-rose-100 text-rose-800",
+};
+
+/** Failed round if any, else the next pending, else the latest logged stage. */
+function currentStageIndex(stages: ApplicationStage[]) {
+  const failed = stages.findIndex((stage) => stage.status === "FAILED");
+  if (failed >= 0) return failed;
+  const pending = stages.findIndex((stage) => stage.status === "PENDING");
+  if (pending >= 0) return pending;
+  return stages.length - 1;
+}
+
+function ApplicationStageHint({ application }: { application: JobApplication }) {
+  const { stages, status } = application;
+  if (stages.length > 0) {
+    const index = currentStageIndex(stages);
+    const stage = stages[index];
+    if (!stage) return null;
+    return (
+      <p className="mt-2 flex items-center gap-1.5 text-[11px] text-[var(--muted)]">
+        <span
+          className={cn(
+            "flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full px-1 text-[10px] font-semibold",
+            STAGE_BADGE_CLASS[stage.status]
+          )}
+        >
+          {index + 1}
+        </span>
+        <span className="truncate">{stage.stageName}</span>
+      </p>
+    );
+  }
+
+  if (status === "INTERVIEWING") {
+    return (
+      <p className="mt-2 flex items-center gap-1.5 text-[11px] text-sky-700">
+        <Phone className="h-3 w-3 shrink-0" aria-hidden />
+        <span className="truncate">Got a callback</span>
+      </p>
+    );
+  }
+
+  return null;
+}
 
 function toDateInputValue(value?: string) {
   if (!value) return new Date().toISOString().slice(0, 10);
@@ -128,6 +205,7 @@ export default function ApplicationsPage() {
       <div className="grid gap-4 lg:grid-cols-5">
         {APPLICATION_STATUSES.map((status) => {
           const columnApps = applications.filter((app) => app.status === status);
+          const StatusIcon = STATUS_ICONS[status];
           return (
             <section
               key={status}
@@ -137,7 +215,11 @@ export default function ApplicationsPage() {
               )}
             >
               <header className="flex items-center justify-between border-b border-[var(--line)] px-3 py-3">
-                <h3 className="text-sm font-semibold text-[var(--ink)]">
+                <h3 className="flex items-center gap-1.5 text-sm font-semibold text-[var(--ink)]">
+                  <StatusIcon
+                    className={cn("h-3.5 w-3.5 shrink-0", STATUS_ICON_CLASS[status])}
+                    aria-hidden
+                  />
                   {STATUS_LABELS[status]}
                 </h3>
                 <span className="rounded-md bg-[var(--mist)] px-2 py-0.5 text-xs text-[var(--muted)]">
@@ -172,12 +254,7 @@ export default function ApplicationsPage() {
                         <span className="truncate">{app.cv.title}</span>
                       </p>
                     ) : null}
-                    {app.stages.length > 0 ? (
-                      <p className="mt-1 text-[11px] text-[var(--muted)]">
-                        {app.stages.length} stage
-                        {app.stages.length === 1 ? "" : "s"}
-                      </p>
-                    ) : null}
+                    <ApplicationStageHint application={app} />
                   </button>
                 ))}
               </div>
@@ -443,6 +520,8 @@ function ApplicationDetailDrawer({
   const [savingStatus, setSavingStatus] = useState(false);
   const [savingDetails, setSavingDetails] = useState(false);
   const [addingStage, setAddingStage] = useState(false);
+  const StatusIcon = STATUS_ICONS[application.status];
+  const DraftStatusIcon = STATUS_ICONS[status];
 
   useEffect(() => {
     setStatus(application.status);
@@ -523,8 +602,12 @@ function ApplicationDetailDrawer({
       <aside className="flex h-full w-full max-w-lg flex-col border-l border-[var(--line)] bg-[var(--paper)] shadow-2xl animate-rise">
         <header className="flex items-start justify-between gap-3 border-b border-[var(--line)] px-5 py-4">
           <div className="min-w-0">
-            <p className="text-xs uppercase tracking-[0.14em] text-[var(--muted)]">
-              Application
+            <p className="flex items-center gap-1.5 text-xs uppercase tracking-[0.14em] text-[var(--muted)]">
+              <StatusIcon
+                className={cn("h-3.5 w-3.5", STATUS_ICON_CLASS[application.status])}
+                aria-hidden
+              />
+              {STATUS_LABELS[application.status]}
             </p>
             <h3 className="mt-1 truncate font-[family-name:var(--font-display)] text-2xl tracking-tight">
               {application.jobTitle}
@@ -601,17 +684,23 @@ function ApplicationDetailDrawer({
             <h4 className="text-sm font-semibold">Status</h4>
             <label className="flex flex-col gap-1.5 text-sm">
               <span className="font-medium text-[var(--ink)]">Current status</span>
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value as ApplicationStatus)}
-                className={selectClassName}
-              >
-                {APPLICATION_STATUSES.map((value) => (
-                  <option key={value} value={value}>
-                    {STATUS_LABELS[value]}
-                  </option>
-                ))}
-              </select>
+              <div className="flex items-center gap-2">
+                <DraftStatusIcon
+                  className={cn("h-4 w-4 shrink-0", STATUS_ICON_CLASS[status])}
+                  aria-hidden
+                />
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value as ApplicationStatus)}
+                  className={cn(selectClassName, "flex-1")}
+                >
+                  {APPLICATION_STATUSES.map((value) => (
+                    <option key={value} value={value}>
+                      {STATUS_LABELS[value]}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </label>
 
             {status === "REJECTED" ? (
@@ -644,19 +733,31 @@ function ApplicationDetailDrawer({
             <h4 className="text-sm font-semibold">Timeline stages</h4>
             {application.stages.length === 0 ? (
               <p className="text-sm text-[var(--muted)]">
-                No stages yet. Add an HR screen, tech interview, or assessment.
+                {application.status === "INTERVIEWING"
+                  ? "Got a callback — add the first round when you have a date."
+                  : "No stages yet. Add an HR screen, tech interview, or assessment."}
               </p>
             ) : (
               <ol className="space-y-3">
-                {application.stages.map((stage) => (
+                {application.stages.map((stage, index) => (
                   <li
                     key={stage.id}
                     className="rounded-lg border border-[var(--line)] bg-[var(--mist)]/40 px-3 py-3"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <p className="text-sm font-medium">{stage.stageName}</p>
-                        <p className="text-xs text-[var(--muted)]">
+                        <p className="flex items-center gap-2 text-sm font-medium">
+                          <span
+                            className={cn(
+                              "flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1 text-[11px] font-semibold",
+                              STAGE_BADGE_CLASS[stage.status]
+                            )}
+                          >
+                            {index + 1}
+                          </span>
+                          {stage.stageName}
+                        </p>
+                        <p className="mt-0.5 ml-7 text-xs text-[var(--muted)]">
                           {new Date(stage.stageDate).toLocaleDateString()}
                         </p>
                       </div>

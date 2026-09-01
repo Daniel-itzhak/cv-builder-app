@@ -180,3 +180,13 @@ export async function deleteCv(req: Request, res: Response): Promise<void> {
   await cvService.deleteCvForUser(req.user.userId, id);
   res.status(204).send();
 }
+
+export async function duplicateCv(req: Request, res: Response): Promise<void> {
+  if (!req.user) {
+    throw new AppError(401, "Unauthorized");
+  }
+
+  const id = requireParam(req.params.id, "id");
+  const cv = await cvService.duplicateCvForUser(req.user.userId, id);
+  res.status(201).json({ data: cv });
+}

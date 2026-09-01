@@ -64,3 +64,11 @@ export async function deleteCv(id: string) {
     token: authToken(),
   });
 }
+
+export async function duplicateCv(id: string) {
+  const res = await apiFetch<{ data: CvDetail }>(`/cvs/${id}/duplicate`, {
+    method: "POST",
+    token: authToken(),
+  });
+  return res.data;
+}

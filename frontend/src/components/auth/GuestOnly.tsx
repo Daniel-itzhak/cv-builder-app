@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getToken } from "@/lib/auth";
+import { clearSession, hasValidSession } from "@/lib/auth";
 
 type Props = {
   children: React.ReactNode;
@@ -14,10 +14,11 @@ export function GuestOnly({ children }: Props) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (getToken()) {
+    if (hasValidSession()) {
       router.replace("/dashboard");
       return;
     }
+    clearSession();
     setReady(true);
   }, [router]);
 

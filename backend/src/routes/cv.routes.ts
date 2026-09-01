@@ -9,6 +9,7 @@ router.use(authenticate);
 
 router.get("/", asyncHandler(cvController.listCvs));
 router.post("/", asyncHandler(cvController.createCv));
+router.post("/:id/duplicate", asyncHandler(cvController.duplicateCv));
 router.get("/:id", asyncHandler(cvController.getCv));
 router.patch("/:id", asyncHandler(cvController.updateCv));
 router.delete("/:id", asyncHandler(cvController.deleteCv));

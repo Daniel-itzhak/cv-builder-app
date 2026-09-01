@@ -21,6 +21,40 @@ export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
 }
 
+function decodeJwtExp(token: string): number | null {
+  try {
+    const segment = token.split(".")[1];
+    if (!segment) return null;
+    const padded = segment
+      .replace(/-/g, "+")
+      .replace(/_/g, "/")
+      .padEnd(Math.ceil(segment.length / 4) * 4, "=");
+    const payload = JSON.parse(atob(padded)) as { exp?: unknown };
+    return typeof payload.exp === "number" ? payload.exp : null;
+  } catch {
+    return null;
+  }
+}
+
+/** True when a JWT is in storage and its `exp` claim is still in the future. */
+export function hasValidSession(): boolean {
+  const token = getToken();
+  if (!token) return false;
+  const exp = decodeJwtExp(token);
+  if (exp === null) return false;
+  return exp * 1000 > Date.now();
+}
+
+/** Clears local auth and sends the user to login, preserving the current path. */
+export function expireSession(): void {
+  if (typeof window === "undefined") return;
+  clearSession();
+  const { pathname, search } = window.location;
+  if (pathname === "/login" || pathname === "/register") return;
+  const next = encodeURIComponent(`${pathname}${search}`);
+  window.location.replace(`/login?next=${next}`);
+}
+
 export function setToken(token: string): void {
   localStorage.setItem(TOKEN_KEY, token);
 }

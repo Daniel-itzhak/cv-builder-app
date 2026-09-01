@@ -3,14 +3,14 @@
 import Link from "next/link";
 import { BrandLink } from "@/components/layout/BrandLink";
 import { Button } from "@/components/ui/button";
-import { getToken } from "@/lib/auth";
+import { hasValidSession } from "@/lib/auth";
 import { useEffect, useState } from "react";
 
 export function SiteHeader() {
   const [loggedIn, setLoggedIn] = useState(false);
 
   useEffect(() => {
-    setLoggedIn(Boolean(getToken()));
+    setLoggedIn(hasValidSession());
   }, []);
 
   return (

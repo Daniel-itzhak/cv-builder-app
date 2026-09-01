@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { FileText } from "lucide-react";
-import { getToken } from "@/lib/auth";
+import { hasValidSession } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -25,7 +25,7 @@ export function BrandLink({
       setHref("/dashboard");
       return;
     }
-    setHref(getToken() ? "/dashboard" : "/");
+    setHref(hasValidSession() ? "/dashboard" : "/");
   }, [forceDashboard]);
 
   return (

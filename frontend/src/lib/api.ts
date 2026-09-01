@@ -1,3 +1,5 @@
+import { expireSession } from "./auth";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
 export type ApiError = {
@@ -34,6 +36,12 @@ export async function apiFetch<T>(
   const data = (await response.json().catch(() => ({}))) as T | ApiError;
 
   if (!response.ok) {
+    // Authenticated request rejected — token is missing, invalid, or expired.
+    if (response.status === 401 && token) {
+      expireSession();
+      return new Promise<T>(() => {});
+    }
+
     const message =
       typeof data === "object" && data && "error" in data
         ? String((data as ApiError).error)
