@@ -9,6 +9,7 @@ const applicationStatusSchema = z.enum([
   "INTERVIEWING",
   "REJECTED",
   "OFFER",
+  "GHOSTED",
 ]);
 
 const stageStatusSchema = z.enum(["PENDING", "PASSED", "FAILED"]);
@@ -120,6 +121,22 @@ const createStageSchema = z.object({
   comments: z.string().max(10000).nullable().optional(),
 });
 
+const updateStageSchema = z
+  .object({
+    stageName: z.string().min(1).max(200).optional(),
+    stageDate: z.coerce.date().optional(),
+    status: stageStatusSchema.optional(),
+    comments: z.string().max(10000).nullable().optional(),
+  })
+  .refine(
+    (data) =>
+      data.stageName !== undefined ||
+      data.stageDate !== undefined ||
+      data.status !== undefined ||
+      data.comments !== undefined,
+    { message: "At least one stage field is required" }
+  );
+
 function requireParam(value: string | string[] | undefined, name: string): string {
   if (typeof value !== "string" || !value) {
     throw new AppError(400, `Missing ${name}`);
@@ -204,4 +221,27 @@ export async function addStage(req: Request, res: Response): Promise<void> {
   );
 
   res.status(201).json({ data: { stage, application } });
+}
+
+export async function updateStage(req: Request, res: Response): Promise<void> {
+  if (!req.user) {
+    throw new AppError(401, "Unauthorized");
+  }
+
+  const id = requireParam(req.params.id, "id");
+  const stageId = requireParam(req.params.stageId, "stageId");
+  const body = updateStageSchema.parse(req.body);
+  const stage = await applicationService.updateStageForUser(
+    req.user.userId,
+    id,
+    stageId,
+    body
+  );
+
+  const application = await applicationService.getApplicationForUser(
+    req.user.userId,
+    id
+  );
+
+  res.status(200).json({ data: { stage, application } });
 }

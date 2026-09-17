@@ -31,6 +31,10 @@ export type CreateStageInput = {
   comments?: string | null;
 };
 
+export const GHOSTED_STAGE_NAME = "Ghosted";
+export const GHOSTED_STAGE_COMMENT =
+  "User marked as ghosted due to inactivity.";
+
 const applicationInclude = {
   stages: {
     orderBy: { stageDate: "asc" as const },
@@ -135,6 +139,9 @@ export async function updateApplicationForUser(
         : { rejectionReason: nextRejectionReason }
       : {};
 
+  const becomingGhosted =
+    input.status === "GHOSTED" && existing.status !== "GHOSTED";
+
   return prisma.jobApplication.update({
     where: { id: applicationId },
     data: {
@@ -156,10 +163,29 @@ export async function updateApplicationForUser(
       ...(input.status !== undefined ? { status: input.status } : {}),
       ...(input.cvId !== undefined ? { cvId: input.cvId } : {}),
       ...rejectionReasonUpdate,
+      ...(becomingGhosted
+        ? {
+            stages: {
+              create: {
+                stageName: GHOSTED_STAGE_NAME,
+                stageDate: new Date(),
+                status: "PENDING" as const,
+                comments: GHOSTED_STAGE_COMMENT,
+              },
+            },
+          }
+        : {}),
     },
     include: applicationInclude,
   });
 }
+
+export type UpdateStageInput = {
+  stageName?: string;
+  stageDate?: Date;
+  status?: StageStatus;
+  comments?: string | null;
+};
 
 export async function addStageForUser(
   userId: string,
@@ -175,6 +201,38 @@ export async function addStageForUser(
       stageDate: input.stageDate,
       status: input.status ?? "PENDING",
       comments: input.comments?.trim() || null,
+    },
+  });
+}
+
+export async function updateStageForUser(
+  userId: string,
+  applicationId: string,
+  stageId: string,
+  input: UpdateStageInput
+) {
+  await getApplicationForUser(userId, applicationId);
+
+  const stage = await prisma.applicationStage.findFirst({
+    where: { id: stageId, applicationId },
+    select: { id: true },
+  });
+
+  if (!stage) {
+    throw new AppError(404, "Stage not found");
+  }
+
+  return prisma.applicationStage.update({
+    where: { id: stageId },
+    data: {
+      ...(input.stageName !== undefined
+        ? { stageName: input.stageName.trim() }
+        : {}),
+      ...(input.stageDate !== undefined ? { stageDate: input.stageDate } : {}),
+      ...(input.status !== undefined ? { status: input.status } : {}),
+      ...(input.comments !== undefined
+        ? { comments: input.comments?.trim() || null }
+        : {}),
     },
   });
 }

@@ -12,5 +12,6 @@ router.post("/", asyncHandler(applicationController.createApplication));
 router.get("/:id", asyncHandler(applicationController.getApplication));
 router.put("/:id", asyncHandler(applicationController.updateApplication));
 router.post("/:id/stages", asyncHandler(applicationController.addStage));
+router.put("/:id/stages/:stageId", asyncHandler(applicationController.updateStage));
 
 export default router;

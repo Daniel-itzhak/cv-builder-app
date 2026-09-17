@@ -3,7 +3,8 @@ export type ApplicationStatus =
   | "APPLIED"
   | "INTERVIEWING"
   | "REJECTED"
-  | "OFFER";
+  | "OFFER"
+  | "GHOSTED";
 
 export type StageStatus = "PENDING" | "PASSED" | "FAILED";
 
@@ -52,6 +53,7 @@ export const APPLICATION_STATUSES: ApplicationStatus[] = [
   "INTERVIEWING",
   "REJECTED",
   "OFFER",
+  "GHOSTED",
 ];
 
 export const STATUS_LABELS: Record<ApplicationStatus, string> = {
@@ -60,7 +62,10 @@ export const STATUS_LABELS: Record<ApplicationStatus, string> = {
   INTERVIEWING: "Interviewing",
   REJECTED: "Rejected",
   OFFER: "Offer",
+  GHOSTED: "Ghosted",
 };
+
+export const STAGE_STATUSES: StageStatus[] = ["PENDING", "PASSED", "FAILED"];
 
 export const STAGE_STATUS_LABELS: Record<StageStatus, string> = {
   PENDING: "Pending",

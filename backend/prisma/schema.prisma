@@ -13,6 +13,7 @@ enum ApplicationStatus {
   INTERVIEWING
   REJECTED
   OFFER
+  GHOSTED
 }
 
 enum StageStatus {

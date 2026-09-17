@@ -14,6 +14,7 @@ import {
   Briefcase,
   ExternalLink,
   FileText,
+  Ghost,
   Phone,
   PlusCircle,
   Send,
@@ -26,9 +27,10 @@ import {
   createApplication,
   listApplications,
   updateApplication,
+  updateApplicationStage,
 } from "@/lib/application-api";
+import { isStaleApplication } from "@/lib/application-stale";
 import type {
-  ApplicationStage,
   ApplicationStatus,
   JobApplication,
   StageStatus,
@@ -36,6 +38,7 @@ import type {
 import {
   APPLIED_FROM_OPTIONS,
   APPLICATION_STATUSES,
+  STAGE_STATUSES,
   STAGE_STATUS_LABELS,
   STATUS_LABELS,
 } from "@/lib/application-types";
@@ -55,6 +58,7 @@ const COLUMN_STYLES: Record<ApplicationStatus, string> = {
   INTERVIEWING: "border-t-sky-600",
   REJECTED: "border-t-rose-600",
   OFFER: "border-t-emerald-600",
+  GHOSTED: "border-t-zinc-400",
 };
 
 const STATUS_ICONS: Record<ApplicationStatus, LucideIcon> = {
@@ -63,6 +67,7 @@ const STATUS_ICONS: Record<ApplicationStatus, LucideIcon> = {
   INTERVIEWING: Phone,
   REJECTED: XCircle,
   OFFER: Award,
+  GHOSTED: Ghost,
 };
 
 const STATUS_ICON_CLASS: Record<ApplicationStatus, string> = {
@@ -71,6 +76,7 @@ const STATUS_ICON_CLASS: Record<ApplicationStatus, string> = {
   INTERVIEWING: "text-sky-600",
   REJECTED: "text-rose-600",
   OFFER: "text-emerald-600",
+  GHOSTED: "text-zinc-400",
 };
 
 const STAGE_BADGE_CLASS: Record<StageStatus, string> = {
@@ -79,19 +85,19 @@ const STAGE_BADGE_CLASS: Record<StageStatus, string> = {
   FAILED: "bg-rose-100 text-rose-800",
 };
 
-/** Failed round if any, else the next pending, else the latest logged stage. */
-function currentStageIndex(stages: ApplicationStage[]) {
-  const failed = stages.findIndex((stage) => stage.status === "FAILED");
-  if (failed >= 0) return failed;
-  const pending = stages.findIndex((stage) => stage.status === "PENDING");
-  if (pending >= 0) return pending;
-  return stages.length - 1;
-}
-
 function ApplicationStageHint({ application }: { application: JobApplication }) {
   const { stages, status } = application;
+  if (status === "GHOSTED") {
+    return (
+      <p className="mt-2 flex items-center gap-1.5 text-[11px] italic text-zinc-500">
+        <Ghost className="h-3 w-3 shrink-0" aria-hidden />
+        <span className="truncate">No employer response</span>
+      </p>
+    );
+  }
+
   if (stages.length > 0) {
-    const index = currentStageIndex(stages);
+    const index = stages.length - 1;
     const stage = stages[index];
     if (!stage) return null;
     return (
@@ -168,7 +174,7 @@ export default function ApplicationsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
+    <div className="mx-auto max-w-[90rem] space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="font-[family-name:var(--font-display)] text-3xl tracking-tight">
@@ -202,20 +208,27 @@ export default function ApplicationsPage() {
         </div>
       ) : null}
 
-      <div className="grid gap-4 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {APPLICATION_STATUSES.map((status) => {
           const columnApps = applications.filter((app) => app.status === status);
           const StatusIcon = STATUS_ICONS[status];
+          const isGhostedColumn = status === "GHOSTED";
           return (
             <section
               key={status}
               className={cn(
                 "min-h-[280px] rounded-xl border border-[var(--line)] border-t-4 bg-[var(--paper)]/80",
-                COLUMN_STYLES[status]
+                COLUMN_STYLES[status],
+                isGhostedColumn && "border-dashed bg-zinc-50/70"
               )}
             >
               <header className="flex items-center justify-between border-b border-[var(--line)] px-3 py-3">
-                <h3 className="flex items-center gap-1.5 text-sm font-semibold text-[var(--ink)]">
+                <h3
+                  className={cn(
+                    "flex items-center gap-1.5 text-sm font-semibold",
+                    isGhostedColumn ? "text-zinc-500" : "text-[var(--ink)]"
+                  )}
+                >
                   <StatusIcon
                     className={cn("h-3.5 w-3.5 shrink-0", STATUS_ICON_CLASS[status])}
                     aria-hidden
@@ -227,36 +240,54 @@ export default function ApplicationsPage() {
                 </span>
               </header>
               <div className="space-y-2 p-2">
-                {columnApps.map((app) => (
-                  <button
-                    key={app.id}
-                    type="button"
-                    onClick={() => setSelectedId(app.id)}
-                    className={cn(
-                      "w-full rounded-lg border border-[var(--line)] bg-[var(--paper)] px-3 py-3 text-left transition hover:border-[var(--accent)]/40 hover:bg-[var(--mist)]/50",
-                      selectedId === app.id && "border-[var(--accent)] ring-2 ring-[var(--accent)]/15"
-                    )}
-                  >
-                    <p className="truncate text-sm font-medium text-[var(--ink)]">
-                      {app.jobTitle}
-                    </p>
-                    <p className="mt-0.5 truncate text-xs text-[var(--muted)]">
-                      {app.companyName}
-                    </p>
-                    {app.appliedFrom ? (
-                      <p className="mt-1 truncate text-[11px] text-[var(--muted)]">
-                        via {app.appliedFrom}
+                {columnApps.map((app) => {
+                  const stale = isStaleApplication(app);
+                  return (
+                    <button
+                      key={app.id}
+                      type="button"
+                      onClick={() => setSelectedId(app.id)}
+                      className={cn(
+                        "w-full rounded-lg border border-[var(--line)] bg-[var(--paper)] px-3 py-3 text-left transition hover:border-[var(--accent)]/40 hover:bg-[var(--mist)]/50",
+                        selectedId === app.id &&
+                          "border-[var(--accent)] ring-2 ring-[var(--accent)]/15",
+                        app.status === "GHOSTED" &&
+                          "border-dashed border-zinc-300 bg-zinc-50/80 opacity-70 grayscale-[0.45] hover:opacity-90 hover:grayscale-0"
+                      )}
+                    >
+                      <p
+                        className={cn(
+                          "truncate text-sm font-medium",
+                          app.status === "GHOSTED"
+                            ? "text-zinc-500"
+                            : "text-[var(--ink)]"
+                        )}
+                      >
+                        {app.jobTitle}
                       </p>
-                    ) : null}
-                    {app.cv ? (
-                      <p className="mt-2 flex items-center gap-1 truncate text-[11px] text-[var(--muted)]">
-                        <FileText className="h-3 w-3 shrink-0" aria-hidden />
-                        <span className="truncate">{app.cv.title}</span>
+                      <p className="mt-0.5 truncate text-xs text-[var(--muted)]">
+                        {app.companyName}
                       </p>
-                    ) : null}
-                    <ApplicationStageHint application={app} />
-                  </button>
-                ))}
+                      {app.appliedFrom ? (
+                        <p className="mt-1 truncate text-[11px] text-[var(--muted)]">
+                          via {app.appliedFrom}
+                        </p>
+                      ) : null}
+                      {app.cv ? (
+                        <p className="mt-2 flex items-center gap-1 truncate text-[11px] text-[var(--muted)]">
+                          <FileText className="h-3 w-3 shrink-0" aria-hidden />
+                          <span className="truncate">{app.cv.title}</span>
+                        </p>
+                      ) : null}
+                      {stale ? (
+                        <p className="mt-2 inline-flex items-center gap-1 rounded-md bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium text-amber-800">
+                          Inactive for 30+ days
+                        </p>
+                      ) : null}
+                      <ApplicationStageHint application={app} />
+                    </button>
+                  );
+                })}
               </div>
             </section>
           );
@@ -520,8 +551,11 @@ function ApplicationDetailDrawer({
   const [savingStatus, setSavingStatus] = useState(false);
   const [savingDetails, setSavingDetails] = useState(false);
   const [addingStage, setAddingStage] = useState(false);
+  const [updatingStageId, setUpdatingStageId] = useState<string | null>(null);
+  const [markingGhosted, setMarkingGhosted] = useState(false);
   const StatusIcon = STATUS_ICONS[application.status];
   const DraftStatusIcon = STATUS_ICONS[status];
+  const stale = isStaleApplication(application);
 
   useEffect(() => {
     setStatus(application.status);
@@ -550,6 +584,23 @@ function ApplicationDetailDrawer({
       onError(err instanceof Error ? err.message : "Failed to update status");
     } finally {
       setSavingStatus(false);
+    }
+  }
+
+  async function handleMarkGhosted() {
+    setMarkingGhosted(true);
+    onError(null);
+    try {
+      const updated = await updateApplication(application.id, {
+        status: "GHOSTED",
+      });
+      onUpdated(updated);
+    } catch (err) {
+      onError(
+        err instanceof Error ? err.message : "Failed to mark as ghosted"
+      );
+    } finally {
+      setMarkingGhosted(false);
     }
   }
 
@@ -588,6 +639,26 @@ function ApplicationDetailDrawer({
       onError(err instanceof Error ? err.message : "Failed to add stage");
     } finally {
       setAddingStage(false);
+    }
+  }
+
+  async function handleStageStatusChange(
+    stageId: string,
+    nextStatus: StageStatus
+  ) {
+    setUpdatingStageId(stageId);
+    onError(null);
+    try {
+      const updated = await updateApplicationStage(application.id, stageId, {
+        status: nextStatus,
+      });
+      onUpdated(updated);
+    } catch (err) {
+      onError(
+        err instanceof Error ? err.message : "Failed to update stage status"
+      );
+    } finally {
+      setUpdatingStageId(null);
     }
   }
 
@@ -643,6 +714,28 @@ function ApplicationDetailDrawer({
         </header>
 
         <div className="flex-1 space-y-6 overflow-y-auto px-5 py-5">
+          {stale ? (
+            <div
+              role="status"
+              className="flex flex-col gap-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-950"
+            >
+              <p className="flex items-start gap-2">
+                <Ghost className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" aria-hidden />
+                <span>
+                  You haven&apos;t heard back in over 30 days. Consider marking
+                  this as ghosted.
+                </span>
+              </p>
+              <Button
+                onClick={() => void handleMarkGhosted()}
+                disabled={markingGhosted || savingStatus}
+                className="self-start bg-zinc-700 text-white hover:bg-zinc-800"
+              >
+                <Ghost className="h-4 w-4" aria-hidden />
+                {markingGhosted ? "Marking…" : "Mark as Ghosted"}
+              </Button>
+            </div>
+          ) : null}
           <section className="space-y-3">
             <h4 className="text-sm font-semibold">Company & source</h4>
             <Textarea
@@ -761,9 +854,18 @@ function ApplicationDetailDrawer({
                           {new Date(stage.stageDate).toLocaleDateString()}
                         </p>
                       </div>
-                      <span
+                      <select
+                        value={stage.status}
+                        disabled={updatingStageId === stage.id}
+                        onChange={(e) =>
+                          void handleStageStatusChange(
+                            stage.id,
+                            e.target.value as StageStatus
+                          )
+                        }
+                        aria-label={`${stage.stageName} outcome`}
                         className={cn(
-                          "rounded-md px-2 py-0.5 text-xs font-medium",
+                          "rounded-md border-0 px-2 py-0.5 text-xs font-medium outline-none focus:ring-2 focus:ring-[var(--accent)]/20",
                           stage.status === "PASSED" &&
                             "bg-emerald-100 text-emerald-800",
                           stage.status === "FAILED" &&
@@ -772,8 +874,12 @@ function ApplicationDetailDrawer({
                             "bg-[var(--mist)] text-[var(--muted)]"
                         )}
                       >
-                        {STAGE_STATUS_LABELS[stage.status]}
-                      </span>
+                        {STAGE_STATUSES.map((value) => (
+                          <option key={value} value={value}>
+                            {STAGE_STATUS_LABELS[value]}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                     {stage.comments ? (
                       <p className="mt-2 text-sm text-[var(--ink-soft)]">

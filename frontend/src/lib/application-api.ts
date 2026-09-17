@@ -83,3 +83,23 @@ export async function addApplicationStage(
   });
   return res.data.application;
 }
+
+export async function updateApplicationStage(
+  applicationId: string,
+  stageId: string,
+  input: {
+    stageName?: string;
+    stageDate?: string;
+    status?: StageStatus;
+    comments?: string | null;
+  }
+) {
+  const res = await apiFetch<{
+    data: { stage: unknown; application: JobApplication };
+  }>(`/applications/${applicationId}/stages/${stageId}`, {
+    method: "PUT",
+    token: authToken(),
+    body: JSON.stringify(input),
+  });
+  return res.data.application;
+}
