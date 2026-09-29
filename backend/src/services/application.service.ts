@@ -1,4 +1,8 @@
-import type { ApplicationStatus, StageStatus } from "@prisma/client";
+import type {
+  ApplicationStatus,
+  RejectionReason,
+  StageStatus,
+} from "@prisma/client";
 import { prisma } from "../config/prisma";
 import { AppError } from "../middleware/errorHandler";
 
@@ -10,7 +14,8 @@ export type CreateApplicationInput = {
   appliedFrom?: string | null;
   status?: ApplicationStatus;
   cvId?: string | null;
-  rejectionReason?: string | null;
+  rejectionReason?: RejectionReason;
+  rejectionNotes?: string | null;
 };
 
 export type UpdateApplicationInput = {
@@ -21,7 +26,8 @@ export type UpdateApplicationInput = {
   appliedFrom?: string | null;
   status?: ApplicationStatus;
   cvId?: string | null;
-  rejectionReason?: string | null;
+  rejectionReason?: RejectionReason;
+  rejectionNotes?: string | null;
 };
 
 export type CreateStageInput = {
@@ -87,9 +93,11 @@ export async function createApplicationForUser(
     await assertCvOwnership(userId, input.cvId);
   }
 
-  if (input.status === "REJECTED" && !input.rejectionReason?.trim()) {
+  if (input.status === "REJECTED" && !input.rejectionReason) {
     throw new AppError(400, "rejectionReason is required when status is REJECTED");
   }
+
+  const isRejected = (input.status ?? "SAVED") === "REJECTED";
 
   return prisma.jobApplication.create({
     data: {
@@ -101,10 +109,10 @@ export async function createApplicationForUser(
       appliedFrom: input.appliedFrom?.trim() || null,
       status: input.status ?? "SAVED",
       cvId: input.cvId ?? null,
-      rejectionReason:
-        input.status === "REJECTED"
-          ? input.rejectionReason?.trim() || null
-          : null,
+      rejectionReason: isRejected ? input.rejectionReason ?? "OTHER" : "OTHER",
+      rejectionNotes: isRejected
+        ? input.rejectionNotes?.trim() || null
+        : null,
     },
     include: applicationInclude,
   });
@@ -121,23 +129,24 @@ export async function updateApplicationForUser(
     await assertCvOwnership(userId, input.cvId);
   }
 
-  const nextStatus = input.status ?? existing.status;
-  const nextRejectionReason =
-    input.rejectionReason !== undefined
-      ? input.rejectionReason?.trim() || null
-      : existing.rejectionReason;
-
-  if (nextStatus === "REJECTED" && !nextRejectionReason) {
+  if (input.status === "REJECTED" && !input.rejectionReason) {
     throw new AppError(400, "rejectionReason is required when status is REJECTED");
   }
 
-  // Only touch rejectionReason when status/reason are part of this update.
-  const rejectionReasonUpdate =
-    input.status !== undefined || input.rejectionReason !== undefined
-      ? nextStatus !== "REJECTED"
-        ? { rejectionReason: null }
-        : { rejectionReason: nextRejectionReason }
-      : {};
+  const nextStatus = input.status ?? existing.status;
+  const rejectionUpdate =
+    input.status !== undefined && input.status !== "REJECTED"
+      ? { rejectionReason: "OTHER" as const, rejectionNotes: null }
+      : nextStatus === "REJECTED"
+        ? {
+            ...(input.rejectionReason !== undefined
+              ? { rejectionReason: input.rejectionReason }
+              : {}),
+            ...(input.rejectionNotes !== undefined
+              ? { rejectionNotes: input.rejectionNotes?.trim() || null }
+              : {}),
+          }
+        : {};
 
   const becomingGhosted =
     input.status === "GHOSTED" && existing.status !== "GHOSTED";
@@ -162,7 +171,7 @@ export async function updateApplicationForUser(
         : {}),
       ...(input.status !== undefined ? { status: input.status } : {}),
       ...(input.cvId !== undefined ? { cvId: input.cvId } : {}),
-      ...rejectionReasonUpdate,
+      ...rejectionUpdate,
       ...(becomingGhosted
         ? {
             stages: {

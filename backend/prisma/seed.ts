@@ -129,7 +129,8 @@ async function main() {
       jobUrl: "https://monday.com/careers",
       appliedFrom: "Company website",
       status: "REJECTED",
-      rejectionReason:
+      rejectionReason: "OTHER",
+      rejectionNotes:
         "Team prioritized a candidate with deeper design-system ownership experience for this opening.",
       stages: {
         create: [

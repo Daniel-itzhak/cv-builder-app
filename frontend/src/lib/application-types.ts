@@ -6,6 +6,18 @@ export type ApplicationStatus =
   | "OFFER"
   | "GHOSTED";
 
+export type RejectionReason =
+  | "AUTO_REJECT"
+  | "POST_HR_SCREEN"
+  | "POST_TECH_ASSESSMENT"
+  | "POST_TECH_INTERVIEW"
+  | "CULTURE_FIT_FINAL_ROUND"
+  | "POSITION_CANCELLED"
+  | "COMPENSATION_MISMATCH"
+  | "ROLE_CHANGED"
+  | "WITHDREW"
+  | "OTHER";
+
 export type StageStatus = "PENDING" | "PASSED" | "FAILED";
 
 export type ApplicationStage = {
@@ -29,7 +41,8 @@ export type JobApplication = {
   jobUrl: string | null;
   appliedFrom: string | null;
   status: ApplicationStatus;
-  rejectionReason: string | null;
+  rejectionReason: RejectionReason;
+  rejectionNotes: string | null;
   createdAt: string;
   updatedAt: string;
   stages: ApplicationStage[];
@@ -64,6 +77,40 @@ export const STATUS_LABELS: Record<ApplicationStatus, string> = {
   OFFER: "Offer",
   GHOSTED: "Ghosted",
 };
+
+export const REJECTION_REASONS: RejectionReason[] = [
+  "AUTO_REJECT",
+  "POST_HR_SCREEN",
+  "POST_TECH_ASSESSMENT",
+  "POST_TECH_INTERVIEW",
+  "CULTURE_FIT_FINAL_ROUND",
+  "POSITION_CANCELLED",
+  "COMPENSATION_MISMATCH",
+  "ROLE_CHANGED",
+  "WITHDREW",
+  "OTHER",
+];
+
+export const REJECTION_REASON_LABELS: Record<RejectionReason, string> = {
+  AUTO_REJECT: "Auto-Reject",
+  POST_HR_SCREEN: "Post HR Screen",
+  POST_TECH_ASSESSMENT: "Post Tech Assessment",
+  POST_TECH_INTERVIEW: "Post Tech Interview",
+  CULTURE_FIT_FINAL_ROUND: "Culture Fit",
+  POSITION_CANCELLED: "Position Cancelled",
+  COMPENSATION_MISMATCH: "Budget Cut",
+  ROLE_CHANGED: "Role Changed",
+  WITHDREW: "Withdrew",
+  OTHER: "Other",
+};
+
+export function isUncategorizedRejection(
+  application: Pick<JobApplication, "status" | "rejectionReason">
+): boolean {
+  return (
+    application.status === "REJECTED" && application.rejectionReason === "OTHER"
+  );
+}
 
 export const STAGE_STATUSES: StageStatus[] = ["PENDING", "PASSED", "FAILED"];
 

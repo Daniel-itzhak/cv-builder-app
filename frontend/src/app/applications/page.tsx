@@ -33,11 +33,15 @@ import { isStaleApplication } from "@/lib/application-stale";
 import type {
   ApplicationStatus,
   JobApplication,
+  RejectionReason,
   StageStatus,
 } from "@/lib/application-types";
 import {
   APPLIED_FROM_OPTIONS,
   APPLICATION_STATUSES,
+  isUncategorizedRejection,
+  REJECTION_REASON_LABELS,
+  REJECTION_REASONS,
   STAGE_STATUSES,
   STAGE_STATUS_LABELS,
   STATUS_LABELS,
@@ -279,6 +283,20 @@ export default function ApplicationsPage() {
                           <span className="truncate">{app.cv.title}</span>
                         </p>
                       ) : null}
+                      {app.status === "REJECTED" ? (
+                        <p
+                          className={cn(
+                            "mt-2 inline-flex max-w-full items-center rounded-md px-1.5 py-0.5 text-[11px] font-medium",
+                            app.rejectionReason === "OTHER"
+                              ? "bg-amber-50 text-amber-800"
+                              : "bg-rose-50 text-rose-800"
+                          )}
+                        >
+                          <span className="truncate">
+                            {REJECTION_REASON_LABELS[app.rejectionReason]}
+                          </span>
+                        </p>
+                      ) : null}
                       {stale ? (
                         <p className="mt-2 inline-flex items-center gap-1 rounded-md bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium text-amber-800">
                           Inactive for 30+ days
@@ -442,6 +460,70 @@ function AppliedFromSelect({
   );
 }
 
+function RejectionFields({
+  reason,
+  notes,
+  promptUpdate,
+  onReasonChange,
+  onNotesChange,
+}: {
+  reason: RejectionReason | "";
+  notes: string;
+  promptUpdate: boolean;
+  onReasonChange: (value: RejectionReason | "") => void;
+  onNotesChange: (value: string) => void;
+}) {
+  return (
+    <div className="space-y-3">
+      <label className="flex flex-col gap-1.5 text-sm" htmlFor="rejectionReason">
+        <span
+          className={cn(
+            "font-medium",
+            promptUpdate ? "text-amber-900" : "text-[var(--ink)]"
+          )}
+        >
+          {promptUpdate ? "Update Rejection Reason" : "Rejection reason"}
+        </span>
+        <select
+          id="rejectionReason"
+          required
+          value={reason}
+          onChange={(e) =>
+            onReasonChange(e.target.value as RejectionReason | "")
+          }
+          className={cn(
+            selectClassName,
+            promptUpdate &&
+              "border-amber-500 bg-amber-50 ring-2 ring-amber-400/40 focus:border-amber-600 focus:ring-amber-400/30"
+          )}
+        >
+          <option value="" disabled>
+            Select a reason
+          </option>
+          {REJECTION_REASONS.map((value) => (
+            <option key={value} value={value}>
+              {REJECTION_REASON_LABELS[value]}
+            </option>
+          ))}
+        </select>
+        {promptUpdate ? (
+          <span className="text-xs text-amber-800">
+            This rejection is still categorized as Other. Pick a specific
+            category so later CV analytics stay accurate.
+          </span>
+        ) : null}
+      </label>
+      <Textarea
+        id="rejectionNotes"
+        label="Rejection notes"
+        value={notes}
+        onChange={(e) => onNotesChange(e.target.value)}
+        placeholder="Optional details from the recruiter or your own notes…"
+      />
+    </div>
+  );
+}
+
 function CreateApplicationModal({
   cvs,
   onClose,
@@ -545,8 +627,11 @@ function ApplicationDetailDrawer({
   const [cvId, setCvId] = useState(application.cvId ?? "");
   const [companyInfo, setCompanyInfo] = useState(application.companyInfo ?? "");
   const [appliedFrom, setAppliedFrom] = useState(application.appliedFrom ?? "");
-  const [rejectionReason, setRejectionReason] = useState(
-    application.rejectionReason ?? ""
+  const [rejectionReason, setRejectionReason] = useState<RejectionReason | "">(
+    application.status === "REJECTED" ? application.rejectionReason : ""
+  );
+  const [rejectionNotes, setRejectionNotes] = useState(
+    application.rejectionNotes ?? ""
   );
   const [savingStatus, setSavingStatus] = useState(false);
   const [savingDetails, setSavingDetails] = useState(false);
@@ -562,7 +647,10 @@ function ApplicationDetailDrawer({
     setCvId(application.cvId ?? "");
     setCompanyInfo(application.companyInfo ?? "");
     setAppliedFrom(application.appliedFrom ?? "");
-    setRejectionReason(application.rejectionReason ?? "");
+    setRejectionReason(
+      application.status === "REJECTED" ? application.rejectionReason : ""
+    );
+    setRejectionNotes(application.rejectionNotes ?? "");
   }, [application]);
 
   const detailsDirty =
@@ -576,8 +664,12 @@ function ApplicationDetailDrawer({
     try {
       const updated = await updateApplication(application.id, {
         status,
-        rejectionReason:
-          status === "REJECTED" ? rejectionReason.trim() || null : null,
+        ...(status === "REJECTED" && rejectionReason
+          ? {
+              rejectionReason,
+              rejectionNotes: rejectionNotes.trim() || null,
+            }
+          : {}),
       });
       onUpdated(updated);
     } catch (err) {
@@ -797,25 +889,22 @@ function ApplicationDetailDrawer({
             </label>
 
             {status === "REJECTED" ? (
-              <Textarea
-                label="Rejection reason"
-                value={rejectionReason}
-                onChange={(e) => setRejectionReason(e.target.value)}
-                placeholder="e.g. Role filled internally, insufficient backend experience…"
+              <RejectionFields
+                reason={rejectionReason}
+                notes={rejectionNotes}
+                promptUpdate={
+                  isUncategorizedRejection(application) &&
+                  rejectionReason === "OTHER"
+                }
+                onReasonChange={setRejectionReason}
+                onNotesChange={setRejectionNotes}
               />
-            ) : null}
-
-            {application.status === "REJECTED" && application.rejectionReason ? (
-              <p className="rounded-md bg-rose-50 px-3 py-2 text-sm text-rose-800">
-                Logged reason: {application.rejectionReason}
-              </p>
             ) : null}
 
             <Button
               onClick={() => void handleStatusSave()}
               disabled={
-                savingStatus ||
-                (status === "REJECTED" && !rejectionReason.trim())
+                savingStatus || (status === "REJECTED" && !rejectionReason)
               }
             >
               {savingStatus ? "Saving…" : "Update status"}

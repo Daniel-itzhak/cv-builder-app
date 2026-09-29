@@ -22,6 +22,19 @@ enum StageStatus {
   FAILED
 }
 
+enum RejectionReason {
+  AUTO_REJECT
+  POST_HR_SCREEN
+  POST_TECH_ASSESSMENT
+  POST_TECH_INTERVIEW
+  CULTURE_FIT_FINAL_ROUND
+  POSITION_CANCELLED
+  COMPENSATION_MISMATCH
+  ROLE_CHANGED
+  WITHDREW
+  OTHER
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -77,7 +90,8 @@ model JobApplication {
   /// Where the application was submitted from (LinkedIn, company site, referral, etc.)
   appliedFrom     String?
   status          ApplicationStatus @default(SAVED)
-  rejectionReason String?
+  rejectionReason RejectionReason   @default(OTHER)
+  rejectionNotes  String?
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
 

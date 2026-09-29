@@ -3,6 +3,7 @@ import { getToken } from "./auth";
 import type {
   ApplicationStatus,
   JobApplication,
+  RejectionReason,
   StageStatus,
 } from "./application-types";
 
@@ -34,7 +35,8 @@ export async function createApplication(input: {
   appliedFrom?: string | null;
   status?: ApplicationStatus;
   cvId?: string | null;
-  rejectionReason?: string | null;
+  rejectionReason?: RejectionReason;
+  rejectionNotes?: string | null;
 }) {
   const res = await apiFetch<{ data: JobApplication }>("/applications", {
     method: "POST",
@@ -54,7 +56,8 @@ export async function updateApplication(
     appliedFrom?: string | null;
     status?: ApplicationStatus;
     cvId?: string | null;
-    rejectionReason?: string | null;
+    rejectionReason?: RejectionReason;
+    rejectionNotes?: string | null;
   }
 ) {
   const res = await apiFetch<{ data: JobApplication }>(`/applications/${id}`, {

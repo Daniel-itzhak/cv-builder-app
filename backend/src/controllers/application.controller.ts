@@ -12,6 +12,19 @@ const applicationStatusSchema = z.enum([
   "GHOSTED",
 ]);
 
+const rejectionReasonSchema = z.enum([
+  "AUTO_REJECT",
+  "POST_HR_SCREEN",
+  "POST_TECH_ASSESSMENT",
+  "POST_TECH_INTERVIEW",
+  "CULTURE_FIT_FINAL_ROUND",
+  "POSITION_CANCELLED",
+  "COMPENSATION_MISMATCH",
+  "ROLE_CHANGED",
+  "WITHDREW",
+  "OTHER",
+]);
+
 const stageStatusSchema = z.enum(["PENDING", "PASSED", "FAILED"]);
 
 const optionalText = z
@@ -50,10 +63,11 @@ const createApplicationSchema = z
       .nullable()
       .optional()
       .transform((value) => (value ? value : null)),
-    rejectionReason: z.string().max(5000).nullable().optional(),
+    rejectionReason: rejectionReasonSchema.optional(),
+    rejectionNotes: optionalText,
   })
   .superRefine((data, ctx) => {
-    if (data.status === "REJECTED" && !data.rejectionReason?.trim()) {
+    if (data.status === "REJECTED" && !data.rejectionReason) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "rejectionReason is required when status is REJECTED",
@@ -91,24 +105,14 @@ const updateApplicationSchema = z
       .transform((value) =>
         value === undefined ? undefined : value ? value : null
       ),
-    rejectionReason: z.string().max(5000).nullable().optional(),
+    rejectionReason: rejectionReasonSchema.optional(),
+    rejectionNotes: optionalText,
   })
   .superRefine((data, ctx) => {
     if (data.status === "REJECTED" && data.rejectionReason === undefined) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "rejectionReason is required when status is REJECTED",
-        path: ["rejectionReason"],
-      });
-    }
-    if (
-      data.status === "REJECTED" &&
-      data.rejectionReason !== undefined &&
-      !data.rejectionReason?.trim()
-    ) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "rejectionReason cannot be empty when status is REJECTED",
         path: ["rejectionReason"],
       });
     }
